@@ -2,7 +2,7 @@
 :root{
   --ink:#F5F0E6; --ink-2:rgba(245,240,230,.76); --ink-3:rgba(245,240,230,.52);
   --glass:rgba(11,17,29,.54); --glass-2:rgba(11,17,29,.72); --line:rgba(245,240,230,.17);
-  --accent:#F3C48D; --on-accent:#1A1408;
+  --accent:#F3C48D; --accent-2:#F2A98A; --on-accent:#1A1408;
   --display:var(--font-fraunces),"Iowan Old Style",Georgia,serif;
   --body:var(--font-instrument),system-ui,-apple-system,"Segoe UI",sans-serif;
   color-scheme:dark;
@@ -30,6 +30,7 @@ p{margin:0}
 .nav{position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:20;width:min(1180px,100% - 32px);display:flex;align-items:center;gap:22px;padding:10px 10px 10px 20px;border-radius:99px}
 .nav .me{font:500 19px var(--display);text-decoration:none;display:flex;align-items:center;gap:10px;margin-right:auto;white-space:nowrap}
 .nav .me i{font-style:italic;color:var(--accent)}
+.nav .mark{height:22px;width:auto;flex:none;color:var(--ink);margin-right:2px}
 .nav a.l{text-decoration:none;font-size:15px;font-weight:500;color:var(--ink-2);transition:color .2s}
 .nav a.l:hover,.nav a.l.on{color:var(--ink)}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;height:48px;padding:0 24px;border-radius:99px;font-weight:600;font-size:16px;text-decoration:none;border:0;cursor:pointer;white-space:nowrap;transition:transform .25s cubic-bezier(.2,.8,.2,1),background .2s}
