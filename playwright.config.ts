@@ -18,7 +18,8 @@ export default defineConfig({
     { name: "mobile", use: { ...devices["Pixel 7"] } },
   ],
   webServer: {
-    command: `pnpm build && pnpm start -p ${port}`,
+    // CI builds once in an earlier step; locally, build first so tests never run against stale output.
+    command: process.env.CI ? `pnpm start -p ${port}` : `pnpm build && pnpm start -p ${port}`,
     url: `http://localhost:${port}`,
     reuseExistingServer: !process.env.CI,
     timeout: 240_000,
