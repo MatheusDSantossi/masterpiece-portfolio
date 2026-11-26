@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { blendLight, sceneLight, type Light } from "@/lib/paint/day";
-import { createProgram } from "@/lib/paint/gl";
+import { createProgram, type Program } from "@/lib/paint/gl";
 import { LANDSCAPE_FS } from "@/lib/paint/landscape-shader";
 
 /**
@@ -19,7 +19,9 @@ export function PaintBackground() {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const program = createProgram(canvas, LANDSCAPE_FS);
+    // Until the shader has compiled, the gradient behind the canvas stands in for the painting.
+    let program: Program | null = null;
+    let disposed = false;
     const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     let dpr = 1;
@@ -118,12 +120,20 @@ export function PaintBackground() {
 
     collectScenes();
     resize();
+    createProgram(canvas, LANDSCAPE_FS).then((ready) => {
+      if (disposed || !ready) return;
+      program = ready;
+      render();
+      canvas.classList.add("ready");
+      wake();
+    });
     addEventListener("resize", resize);
     addEventListener("scroll", wake, { passive: true });
     addEventListener("pointermove", onPointerMove);
     addEventListener("pointerdown", wake);
     addEventListener("keydown", wake);
     return () => {
+      disposed = true;
       cancelAnimationFrame(frameId);
       removeEventListener("resize", resize);
       removeEventListener("scroll", wake);
