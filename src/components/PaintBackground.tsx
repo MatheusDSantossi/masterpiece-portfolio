@@ -12,6 +12,8 @@ import { LANDSCAPE_FS } from "@/lib/paint/landscape-shader";
  * moves the light and a glass bead. The render loop stops when nothing changes.
  */
 const MIN_QUALITY = 0.6;
+/** GPU time one full-scale frame may take before the render scale is lowered, in ms. */
+const FRAME_BUDGET = 12;
 
 export function PaintBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -27,11 +29,10 @@ export function PaintBackground() {
     const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     let dpr = 1;
-    // Render scale, lowered while animating if frames run slow. The painting is soft, so fewer pixels
-    // barely show, while a dropped frame does. It never goes back up, so it cannot oscillate.
+    // Render scale, chosen once before the painting fades in. The painting is soft, so fewer pixels
+    // barely show, while a dropped frame does. It never changes afterwards: the grain is drawn per
+    // canvas pixel, so lowering it mid-scroll made the whole painting visibly jump to a coarser size.
     let quality = 1;
-    let lastFrame = 0;
-    const intervals: number[] = [];
     let scenes: HTMLElement[] = [];
     let awake = false;
     let frameId = 0;
@@ -84,20 +85,22 @@ export function PaintBackground() {
       draw();
     };
 
-    const adapt = (now: number) => {
-      if (lastFrame) intervals.push(now - lastFrame);
-      lastFrame = now;
-      if (intervals.length < 12) return;
-      const average = intervals.reduce((sum, v) => sum + v, 0) / intervals.length;
-      intervals.length = 0;
-      if (average > 22 && quality > MIN_QUALITY) {
-        quality = Math.max(MIN_QUALITY, quality * 0.85);
-        sizeCanvas();
-      }
+    /** Times one synchronous frame at full scale and lowers the render scale to fit FRAME_BUDGET. */
+    const calibrate = (gl: WebGLRenderingContext) => {
+      const pixel = new Uint8Array(4);
+      // readPixels waits for the GPU to finish. The first frame also absorbs driver warm-up, so only the second is timed.
+      render();
+      gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+      const start = performance.now();
+      render();
+      gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+      const elapsed = performance.now() - start;
+      // Cost grows with the pixel count, the square of the scale.
+      quality = Math.min(1, Math.max(MIN_QUALITY, Math.sqrt(FRAME_BUDGET / Math.max(elapsed, 0.001))));
+      if (quality < 1) sizeCanvas();
     };
 
-    const frame = (now: number) => {
-      adapt(now);
+    const frame = () => {
       const ease = reduce ? 1 : 0.09;
       const d = [scrollY - sy, tx - px, ty - py, tbx - bx, tby - by] as const;
       sy += d[0] * ease;
@@ -108,11 +111,7 @@ export function PaintBackground() {
       render();
       const moving = Math.abs(d[0]) > 0.4 || Math.abs(d[1]) + Math.abs(d[2]) > 0.002 || Math.abs(d[3]) + Math.abs(d[4]) > 0.4;
       if (moving) frameId = requestAnimationFrame(frame);
-      else {
-        awake = false;
-        lastFrame = 0;
-        intervals.length = 0;
-      }
+      else awake = false;
     };
 
     const wake = () => {
@@ -150,6 +149,7 @@ export function PaintBackground() {
     createProgram(canvas, LANDSCAPE_FS).then((ready) => {
       if (disposed || !ready) return;
       program = ready;
+      calibrate(ready.gl);
       render();
       canvas.classList.add("ready");
       wake();
