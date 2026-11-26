@@ -9,6 +9,18 @@
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
+/* Scrollbar: a dark glass track with an amber brush stroke for the thumb. Firefox only takes colors and width.
+   Chromium ignores the ::-webkit rules once scrollbar-color is set, so the standard properties are fenced off. */
+::-webkit-scrollbar{width:12px;height:12px}
+::-webkit-scrollbar-track{background:var(--glass-2)}
+::-webkit-scrollbar-thumb{
+  border:3px solid transparent;background-clip:padding-box;
+  border-radius:9px 6px 10px 5px/26px 12px 30px 14px;
+  background-image:repeating-linear-gradient(90deg,rgba(26,20,8,.12) 0 1px,transparent 1px 3px),linear-gradient(90deg,#D49B5E,var(--accent) 35%,#F9DDB4 60%,#DCA868);
+}
+::-webkit-scrollbar-thumb:hover{background-image:repeating-linear-gradient(90deg,rgba(26,20,8,.1) 0 1px,transparent 1px 3px),linear-gradient(90deg,#E4AE70,#F8D2A0 35%,#FFEBCB 60%,#ECBA7C)}
+::-webkit-scrollbar-corner{background:transparent}
+@supports not selector(::-webkit-scrollbar){html{scrollbar-width:thin;scrollbar-color:var(--accent) var(--glass-2)}}
 body{margin:0;background:#0C1320;color:var(--ink);font:400 17px/1.55 var(--body);-webkit-font-smoothing:antialiased;overflow-x:hidden}
 /* The gradient holds the painting's place while its shader compiles, then the canvas fades in over it. */
 body:before{content:"";position:fixed;inset:0;z-index:0;background:linear-gradient(180deg,#2B3F6B,#F2A98A 55%,#27405F)}
