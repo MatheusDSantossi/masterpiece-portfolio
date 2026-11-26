@@ -5,7 +5,7 @@ Default mode: deliver
 Personal portfolio v3. `Matheus D. Santos Portfolio v2.html` is the visual source of truth: match it exactly.
 Design decisions live in `docs/design/0001-portfolio-v3.md`.
 
-Merge strategy: unset (ask once).
+Merging: I open the PR; the owner reviews and merges it manually in the GitHub UI. Never merge, and never ask which strategy to use.
 
 ## Agent skills
 
