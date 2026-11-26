@@ -9,6 +9,16 @@ test("home renders every section, job and project", async ({ page }) => {
   await expect(page.locator(".ring .cv")).toHaveCount(projects.length);
 });
 
+test("project paintings load on the hub", async ({ page }) => {
+  await page.goto("/projects");
+  const paintings = page.locator(".hub .cv img");
+  await expect(paintings).toHaveCount(projects.length);
+  for (const img of await paintings.all()) {
+    await img.scrollIntoViewIfNeeded();
+    await expect.poll(() => img.evaluate((el: HTMLImageElement) => el.complete && el.naturalWidth > 0)).toBe(true);
+  }
+});
+
 test("gallery arrows move the detail panel", async ({ page }) => {
   await page.goto("/#projects");
   const detail = page.locator(".detail h3");

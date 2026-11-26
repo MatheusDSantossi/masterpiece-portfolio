@@ -8,9 +8,26 @@ export type Program = {
   draw: () => void;
 };
 
-/** Compiles a full-screen-triangle program. Returns null when WebGL is unavailable or the shader fails. */
-export function createProgram(canvas: HTMLCanvasElement, fragment: string): Program | null {
-  const gl = canvas.getContext("webgl", { antialias: false, preserveDrawingBuffer: true });
+/** COMPLETION_STATUS_KHR from KHR_parallel_shader_compile. */
+const COMPLETION_STATUS = 0x91b1;
+
+/** Resolves on the next animation frame where the driver reports the program as linked. */
+function linked(gl: WebGLRenderingContext, program: WebGLProgram): Promise<void> {
+  // Without the extension, asking for the link status is the only option, and it blocks until compiled.
+  if (!gl.getExtension("KHR_parallel_shader_compile")) return Promise.resolve();
+  return new Promise((resolve) => {
+    const poll = () => (gl.getProgramParameter(program, COMPLETION_STATUS) ? resolve() : requestAnimationFrame(poll));
+    poll();
+  });
+}
+
+/**
+ * Compiles a full-screen-triangle program. Resolves to null when WebGL is unavailable or the shader fails.
+ * The compile runs in the background where the browser supports it: a large fragment shader can take
+ * seconds to compile on integrated GPUs the first time, and waiting for it on the main thread froze the page.
+ */
+export async function createProgram(canvas: HTMLCanvasElement, fragment: string): Promise<Program | null> {
+  const gl = canvas.getContext("webgl", { antialias: false });
   if (!gl) return null;
 
   const compile = (type: number, source: string) => {
@@ -28,6 +45,7 @@ export function createProgram(canvas: HTMLCanvasElement, fragment: string): Prog
   gl.attachShader(program, vs);
   gl.attachShader(program, fs);
   gl.linkProgram(program);
+  await linked(gl, program);
   if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
     logger.error("shader link failed", { log: gl.getProgramInfoLog(program) ?? gl.getShaderInfoLog(fs) });
     return null;

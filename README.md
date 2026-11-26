@@ -20,6 +20,7 @@ pnpm dev                     # http://localhost:3000
 | `pnpm test` | Vitest: content integrity and contact validation |
 | `pnpm test:e2e` | Playwright on desktop and mobile; builds and starts the app itself |
 | `pnpm lint` / `pnpm typecheck` | ESLint and `tsc` |
+| `pnpm paint` | Renders the project paintings from their screenshots into `public/paintings/` |
 
 First e2e run: `pnpm exec playwright install chromium`.
 
@@ -38,7 +39,8 @@ First e2e run: `pnpm exec playwright install chromium`.
 
 1. Add a screenshot to `public/projects/<slug>.webp` (about 960px wide).
 2. Add an entry to `src/content/projects.ts`. `art` frames the painting: `focus` is the point to center on, `zoom` crops in, `exposure` lifts dark screenshots or dims bright ones.
-3. `pnpm test` checks the slug, links, palette, screenshot path and case study.
+3. Run `pnpm paint` to render its painting into `public/paintings/<slug>.webp`, and commit the file. Re-run it whenever the screenshot, palette or `art` changes. Paintings are rendered once, ahead of time, because the shader is too heavy to run in visitors' browsers.
+4. `pnpm test` checks the slug, links, palette, screenshot, painting and case study.
 
 ## Environment
 
