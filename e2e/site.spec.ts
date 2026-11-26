@@ -5,7 +5,7 @@ test("home renders every section, job and project", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Software, built");
   for (const id of ["about", "work", "projects", "contact"]) await expect(page.locator(`#${id}`)).toBeAttached();
-  await expect(page.locator(".job")).toHaveCount(4);
+  await expect(page.locator(".tl-stop")).toHaveCount(4);
   await expect(page.locator(".ring .cv")).toHaveCount(projects.length);
 });
 
