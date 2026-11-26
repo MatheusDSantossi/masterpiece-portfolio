@@ -1,25 +1,12 @@
-"use client";
-
-import { useEffect, useRef } from "react";
+import Image from "next/image";
 import type { Project } from "@/content/types";
-import { ART_HEIGHT, ART_WIDTH, paintProject } from "@/lib/paint/project-art";
+import { ART_HEIGHT, ART_WIDTH, paintingPath } from "@/lib/paint/art-layout";
 
-/** The painting inside a project frame. Until it is painted, the frame's palette gradient shows through. */
+/**
+ * The painting inside a project frame, pre-rendered by `pnpm paint`.
+ * Until it loads, the frame's palette gradient shows through.
+ * Served as-is: the files are already sized and compressed for the frame.
+ */
 export function ProjectArt({ project }: { project: Project }) {
-  const ref = useRef<HTMLCanvasElement>(null);
-  const { slug, screenshot, palette, art } = project;
-
-  useEffect(() => {
-    let cancelled = false;
-    paintProject({ slug, screenshot, palette, art }).then((painting) => {
-      const canvas = ref.current;
-      if (cancelled || !painting || !canvas) return;
-      canvas.getContext("2d")?.drawImage(painting, 0, 0);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [slug, screenshot, palette, art]);
-
-  return <canvas ref={ref} width={ART_WIDTH} height={ART_HEIGHT} />;
+  return <Image src={paintingPath(project.slug)} width={ART_WIDTH} height={ART_HEIGHT} alt="" unoptimized />;
 }

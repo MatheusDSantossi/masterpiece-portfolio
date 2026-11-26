@@ -1,6 +1,7 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { paintingPath } from "@/lib/paint/art-layout";
 import { jobs, socials, tools } from "./profile";
 import { getProject, projects, relatedProjects } from "./projects";
 
@@ -23,6 +24,12 @@ describe("projects", () => {
   it("points every screenshot at a file in public/", () => {
     for (const { screenshot } of projects) {
       expect(existsSync(join(process.cwd(), "public", screenshot)), screenshot).toBe(true);
+    }
+  });
+
+  it("has a pre-rendered painting for every project (run `pnpm paint`)", () => {
+    for (const { slug } of projects) {
+      expect(existsSync(join(process.cwd(), "public", paintingPath(slug))), slug).toBe(true);
     }
   });
 

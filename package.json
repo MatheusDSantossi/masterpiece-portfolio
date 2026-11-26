@@ -10,7 +10,8 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "paint": "node --experimental-strip-types --disable-warning=ExperimentalWarning scripts/paint-projects.ts"
   },
   "dependencies": {
     "next": "^15.5.29",
