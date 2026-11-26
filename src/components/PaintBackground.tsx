@@ -11,6 +11,8 @@ import { LANDSCAPE_FS } from "@/lib/paint/landscape-shader";
  * through the day (each [data-scene] section names a time of day) and the cursor
  * moves the light and a glass bead. The render loop stops when nothing changes.
  */
+const MIN_QUALITY = 0.6;
+
 export function PaintBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wakeRef = useRef<() => void>(() => {});
@@ -25,6 +27,11 @@ export function PaintBackground() {
     const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     let dpr = 1;
+    // Render scale, lowered while animating if frames run slow. The painting is soft, so fewer pixels
+    // barely show, while a dropped frame does. It never goes back up, so it cannot oscillate.
+    let quality = 1;
+    let lastFrame = 0;
+    const intervals: number[] = [];
     let scenes: HTMLElement[] = [];
     let awake = false;
     let frameId = 0;
@@ -77,7 +84,20 @@ export function PaintBackground() {
       draw();
     };
 
-    const frame = () => {
+    const adapt = (now: number) => {
+      if (lastFrame) intervals.push(now - lastFrame);
+      lastFrame = now;
+      if (intervals.length < 12) return;
+      const average = intervals.reduce((sum, v) => sum + v, 0) / intervals.length;
+      intervals.length = 0;
+      if (average > 22 && quality > MIN_QUALITY) {
+        quality = Math.max(MIN_QUALITY, quality * 0.85);
+        sizeCanvas();
+      }
+    };
+
+    const frame = (now: number) => {
+      adapt(now);
       const ease = reduce ? 1 : 0.09;
       const d = [scrollY - sy, tx - px, ty - py, tbx - bx, tby - by] as const;
       sy += d[0] * ease;
@@ -88,7 +108,11 @@ export function PaintBackground() {
       render();
       const moving = Math.abs(d[0]) > 0.4 || Math.abs(d[1]) + Math.abs(d[2]) > 0.002 || Math.abs(d[3]) + Math.abs(d[4]) > 0.4;
       if (moving) frameId = requestAnimationFrame(frame);
-      else awake = false;
+      else {
+        awake = false;
+        lastFrame = 0;
+        intervals.length = 0;
+      }
     };
 
     const wake = () => {
@@ -101,10 +125,13 @@ export function PaintBackground() {
       wake();
     };
 
-    const resize = () => {
-      dpr = Math.min(devicePixelRatio || 1, 1.5) * (innerWidth > 1600 ? 0.8 : 1);
+    const sizeCanvas = () => {
+      dpr = Math.min(devicePixelRatio || 1, 1.5) * (innerWidth > 1600 ? 0.8 : 1) * quality;
       canvas.width = Math.round(innerWidth * dpr);
       canvas.height = Math.round(innerHeight * dpr);
+    };
+    const resize = () => {
+      sizeCanvas();
       render();
       wake();
     };
