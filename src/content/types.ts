@@ -48,7 +48,12 @@ export type Project = {
 export type Job = {
   company: string;
   role: string;
+  /** Display label, e.g. "Jul 2025 to now". */
   period: string;
+  /** "YYYY-MM". Drives the career path layout. */
+  start: string;
+  /** "YYYY-MM"; absent for the current job. */
+  end?: string;
   current: boolean;
   summary: string;
 };

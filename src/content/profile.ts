@@ -42,6 +42,7 @@ export const jobs: Job[] = [
     company: "Grupo Atan",
     role: "Fullstack Developer",
     period: "Jul 2025 to now",
+    start: "2025-07",
     current: true,
     summary:
       "React and TypeScript applications, a point-of-sale system with SEFAZ integration, and Python automation. I led a navigation refactor that replaced route-based flow with a component registry, which cut page reloads.",
@@ -50,6 +51,8 @@ export const jobs: Job[] = [
     company: "Céos Soluções Empresariais",
     role: "IT Intern, then Support Analyst",
     period: "Oct 2023 to Jun 2025",
+    start: "2023-10",
+    end: "2025-06",
     current: false,
     summary:
       "User support and systems on Windows Server and TOTVS RM. Part of a TOTVS Protheus rollout across finance, purchasing and inventory, and I built the company website.",
@@ -58,6 +61,8 @@ export const jobs: Job[] = [
     company: "Tambaú Alimentos",
     role: "Young Apprentice",
     period: "Jan 2021 to Feb 2022",
+    start: "2021-01",
+    end: "2022-02",
     current: false,
     summary:
       "Excel VBA macros that automated repetitive work, Power BI dashboards for the team, and Senai training in 5S and Kanban.",
@@ -66,6 +71,8 @@ export const jobs: Job[] = [
     company: "Santos Supermarket",
     role: "Multifunctional team member",
     period: "Jan 2019 to Feb 2022",
+    start: "2019-01",
+    end: "2022-02",
     current: false,
     summary:
       "Hardware, invoices, accounts and customers in the family business. This is where wanting to build systems started.",

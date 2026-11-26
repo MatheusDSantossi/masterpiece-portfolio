@@ -63,6 +63,14 @@ describe("profile", () => {
     expect(jobs.filter((job) => job.current)).toHaveLength(1);
   });
 
+  it("dates every job, and only the current one has no end", () => {
+    for (const job of jobs) {
+      expect(job.start).toMatch(/^\d{4}-\d{2}$/);
+      expect(job.end === undefined).toBe(job.current);
+      if (job.end) expect(job.end >= job.start).toBe(true);
+    }
+  });
+
   it("lists backend tools and the Reddit profile", () => {
     expect(tools.some((row) => row.label === "Backend and infra")).toBe(true);
     expect(socials.some((social) => social.network === "Reddit")).toBe(true);
