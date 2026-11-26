@@ -1,5 +1,9 @@
-// GLSL for the background landscape, ported verbatim from the v2 design file.
+// GLSL for the background landscape, ported from the v2 design file.
 // Strokes are laid in two layers; each stroke takes the color of the scene at its center.
+// Each of sky(), scene() and paint() is called from exactly one place: shader compilers inline every call,
+// and v2's repeated calls made a program that took 5+ seconds to compile on integrated GPUs.
+// The math is unchanged: a software renderer gives pixel-identical output. GPU drivers may still
+// scatter individual strokes differently, since the sin-based hash amplifies their rounding choices.
 export const LANDSCAPE_FS = `precision highp float;
 uniform vec2 uRes,uMouse,uPar,uSun;uniform float uBead,uSeed,uDim,uStars;uniform vec3 cTop,cLow,cSun,cHill,cWater;
 const float H=-.06;
@@ -26,12 +30,11 @@ vec3 sky(vec2 c,float h){
   if(c.y<r2)col=mix(cHill,cLow,.18);
   return col;}
 vec3 scene(vec2 c){
-  float h=H+uPar.y*.02;vec3 col;
-  if(c.y>h)col=sky(c,h);
-  else{
-    float dep=h-c.y;
-    float wob=(noise(vec2(c.x*2.5+uSeed,c.y*38.))-.5)*(.03+dep*.24);
-    col=sky(vec2(c.x+wob,h+dep*.9),h);
+  float h=H+uPar.y*.02;
+  bool water=c.y<=h;float dep=0.,wob=0.;
+  if(water){dep=h-c.y;wob=(noise(vec2(c.x*2.5+uSeed,c.y*38.))-.5)*(.03+dep*.24);}
+  vec3 col=sky(water?vec2(c.x+wob,h+dep*.9):c,h);
+  if(water){
     col=mix(col,cWater,.30+dep*.55);
     float lx=mix(uSun.x,.40,uStars);
     float g=exp(-abs(c.x-lx+wob*3.)*(8.-dep*7.))*smoothstep(.38,.72,noise(vec2(c.x*6.,c.y*70.)));
@@ -43,8 +46,8 @@ vec3 scene(vec2 c){
   if(c.y<bank)col=mix(cHill*.42,cWater*.5,.35);
   return col;}
 float sAng(vec2 c){if(c.y<H)return (noise(c*6.)-.5)*.3;return (noise(c*2.+uSeed)-.5)*1.7+.3;}
-vec4 lay(vec2 p,float sz,float sd,vec2 asp){
-  vec2 id=floor(p/sz);float best=-1.,br=0.;vec2 bc=vec2(0.),bl=vec2(0.);
+bool lay(vec2 p,float sz,float sd,vec2 asp,inout vec2 bc,inout vec2 bl,inout float br){
+  vec2 id=floor(p/sz);float best=-1.;
   for(int j=-1;j<=1;j++)for(int i=-1;i<=1;i++){
     vec2 cid=id+vec2(float(i),float(j));vec2 r=hash2(cid+sd);
     vec2 ctr=(cid+.5+(r-.5)*.85)*sz;float a=sAng(ctr)+(r.y-.5)*.5;vec2 dir=vec2(cos(a),sin(a));vec2 d=p-ctr;
@@ -52,24 +55,29 @@ vec4 lay(vec2 p,float sz,float sd,vec2 asp){
     float e=dot(l,l)+(noise(p*150.+sd)-.5)*.5;float pr=hash(cid*1.31+sd+.5);
     if(e<1.&&pr>best){best=pr;bc=ctr;bl=l;br=r.x;}
   }
-  if(best<0.)return vec4(0.);
-  vec3 col=scene(bc);col*=.88+.24*br;col*=1.+.11*bl.y;col+=(noise(vec2(bl.x*2.5,bl.y*13.)+bc*40.)-.5)*.12;
-  return vec4(col,1.);}
-vec3 paint(vec2 p){vec4 a=lay(p,.024,3.,vec2(1.,.42));if(a.a>0.)return a.rgb;vec4 b=lay(p,.052,9.,vec2(1.1,.72));if(b.a>0.)return b.rgb;return scene(p);}
+  return best>=0.;}
+vec3 paint(vec2 p){
+  vec2 bc=vec2(0.),bl=vec2(0.);float br=0.;
+  bool hit=lay(p,.024,3.,vec2(1.,.42),bc,bl,br);
+  if(!hit)hit=lay(p,.052,9.,vec2(1.1,.72),bc,bl,br);
+  vec3 col=scene(hit?bc:p);
+  if(hit){col*=.88+.24*br;col*=1.+.11*bl.y;col+=(noise(vec2(bl.x*2.5,bl.y*13.)+bc*40.)-.5)*.12;}
+  return col;}
 void main(){
   vec2 uv=gl_FragCoord.xy/uRes;
   vec2 p=(gl_FragCoord.xy-.5*uRes)/uRes.y;
   vec2 m=(uMouse-.5*uRes)/uRes.y;
-  vec3 col;float R=uBead;vec2 dd=(p-m)/max(R,.0001);float l=length(dd);
-  if(R>0.&&l<1.){
+  float R=uBead;vec2 dd=(p-m)/max(R,.0001);float l=length(dd);
+  bool bead=R>0.&&l<1.;
+  vec3 col=paint(bead?m+dd*R*mix(.3,1.,l*l*l):p);
+  if(bead){
     float z=sqrt(1.-l*l);
-    col=paint(m+dd*R*mix(.3,1.,l*l*l))*1.1;
+    col*=1.1;
     vec3 n=normalize(vec3(dd,z));
     col+=pow(max(dot(n,normalize(vec3(-.45,.6,.66))),0.),60.)*.9;
     col=mix(col,vec3(1.),pow(1.-z,4.)*.28);
     col*=smoothstep(1.,.985,l)*.25+.75;
   }else{
-    col=paint(p);
     if(R>0.)col*=1.-.38*smoothstep(1.5,.95,length((p-m-vec2(.03,-.05))/R));
   }
   col*=.965+.035*sin(gl_FragCoord.x*1.7)*sin(gl_FragCoord.y*1.7);
