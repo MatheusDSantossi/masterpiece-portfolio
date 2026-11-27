@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Fragment } from "react";
+import { CareerPath } from "@/components/CareerPath";
 import { ContactForm } from "@/components/ContactForm";
 import { RevealEffect } from "@/components/Effects";
 import { GalleryRing } from "@/components/GalleryRing";
@@ -112,21 +113,7 @@ export default function HomePage() {
               Where I&apos;ve <em>worked.</em>
             </h2>
           </div>
-          <div className="rv glass jobs">
-            {jobs.map((job) => (
-              <article key={job.company} className="job">
-                <span className="when">{job.period}</span>
-                <div>
-                  <h3 className="shadow">
-                    {job.company}
-                    {job.current && <span className="now">Now</span>}
-                  </h3>
-                  <p className="role">{job.role}</p>
-                </div>
-                <p className="d shadow">{job.summary}</p>
-              </article>
-            ))}
-          </div>
+          <CareerPath jobs={jobs} />
         </div>
       </section>
 
