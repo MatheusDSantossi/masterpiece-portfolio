@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { profile } from "@/content/profile";
+import { LogoMark } from "./LogoMark";
 
 const SECTIONS = [
   { id: "about", label: "About" },
@@ -40,6 +41,7 @@ export function Nav() {
   return (
     <header className="nav glass">
       <Link className="me" href="/">
+        <LogoMark className="mark" />
         {profile.firstName} <i>{profile.lastName}</i>
       </Link>
       {SECTIONS.map(({ id, label }) => (
