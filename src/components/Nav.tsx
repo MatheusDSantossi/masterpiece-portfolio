@@ -49,6 +49,9 @@ export function Nav() {
           {label}
         </Link>
       ))}
+      <Link className={`l${pathname === "/resume" ? " on" : ""}`} href="/resume">
+        Résumé
+      </Link>
       <Link className="btn pri sm" href="/#contact">
         Get in touch
       </Link>

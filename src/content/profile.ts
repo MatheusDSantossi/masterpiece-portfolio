@@ -88,3 +88,12 @@ export const socials: Social[] = [
 ];
 
 export const currentJob = jobs.find((job) => job.current);
+
+/** Résumé-only content. Everything else on /resume comes from the exports above, so the two pages never disagree. */
+export const resume = {
+  summary:
+    "Full-stack developer shipping React, TypeScript and Python in production. I own features end to end: interface, API, integrations and the automation around them. Currently building a point-of-sale system with SEFAZ integration at Grupo Atan, and Plai, an AI curation product, on my own.",
+  /** Slugs of the projects listed on the résumé, in order. */
+  projectSlugs: ["plai", "posture-guard", "hecate-landing-page", "social-media-app"],
+  education: [{ school: profile.university, detail: "Undergraduate studies" }],
+} as const;

@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { paintingPath } from "@/lib/paint/art-layout";
-import { jobs, socials, tools } from "./profile";
+import { jobs, resume, socials, tools } from "./profile";
 import { getProject, projects, relatedProjects } from "./projects";
 
 describe("projects", () => {
@@ -74,5 +74,11 @@ describe("profile", () => {
   it("lists backend tools and the Reddit profile", () => {
     expect(tools.some((row) => row.label === "Backend and infra")).toBe(true);
     expect(socials.some((social) => social.network === "Reddit")).toBe(true);
+  });
+});
+
+describe("resume", () => {
+  it("only lists projects that exist", () => {
+    for (const slug of resume.projectSlugs) expect(getProject(slug), slug).toBeDefined();
   });
 });

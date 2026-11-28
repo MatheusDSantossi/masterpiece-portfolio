@@ -1,0 +1,263 @@
+/* Résumé sheet. On screen it is a glass page over the painting; in print it becomes plain ink on paper. */
+.rhero {
+  padding-bottom: 0;
+}
+.rhero .btns {
+  margin-top: -18px;
+}
+.rsec {
+  padding-top: clamp(36px, 5vw, 64px);
+}
+.sheet {
+  max-width: 980px;
+  margin-inline: auto;
+  padding: clamp(24px, 4.5vw, 56px);
+  background: var(--glass-2);
+}
+.sh-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 18px 32px;
+  padding-bottom: 26px;
+  border-bottom: 1px solid var(--line);
+}
+.sh-head h2 {
+  font-size: clamp(36px, 5vw, 60px);
+  line-height: 1;
+}
+.sh-head h2 em {
+  color: var(--accent);
+}
+.sh-role {
+  margin-top: 10px;
+  color: var(--ink-2);
+  font-size: 18px;
+}
+.sh-contact {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 15px;
+  text-align: right;
+}
+.sh-contact a {
+  text-decoration: none;
+  color: var(--ink-2);
+}
+.sh-contact a:hover {
+  color: var(--accent);
+}
+.sh-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
+  gap: clamp(28px, 4vw, 56px);
+  padding-top: 30px;
+}
+.sh-main,
+.sh-side {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+.sh-block {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 0;
+}
+.sh-block h3.label {
+  font-family: var(--body);
+  letter-spacing: 0.16em;
+  color: var(--accent);
+}
+.sh-block p {
+  font-size: 16px;
+  color: var(--ink);
+}
+.sh-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.sh-list li {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.sh-list p {
+  margin-top: 4px;
+  color: var(--ink-2);
+}
+.sh-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 4px 16px;
+}
+.sh-row b {
+  font: 400 22px/1.2 var(--display);
+}
+.sh-row a {
+  text-decoration: none;
+}
+.sh-row a:hover b {
+  color: var(--accent);
+}
+.sh-when {
+  font-size: 14px;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+.sh-org {
+  font-size: 15px;
+  color: var(--ink-2);
+}
+.sh-skills {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.sh-skills dt {
+  font-size: 13px;
+  color: var(--ink-3);
+}
+.sh-skills dd {
+  margin: 0 0 10px;
+  font-size: 15px;
+}
+.sh-plain {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 15px;
+}
+.sh-plain li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.sh-plain b {
+  font-weight: 500;
+}
+@media (max-width: 900px) {
+  .sh-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 640px) {
+  .sh-contact {
+    text-align: left;
+  }
+}
+
+/* Print: only the sheet, black on white, on one or two A4 pages. */
+@page {
+  size: A4;
+  margin: 14mm 14mm 16mm;
+}
+@media print {
+  :root {
+    --ink: #14110c;
+    --ink-2: #3d382f;
+    --ink-3: #6b6457;
+    --line: #d8d2c6;
+    --accent: #8a4b12;
+    color-scheme: light;
+  }
+  body,
+  body:before {
+    background: #fff;
+  }
+  #paint,
+  .nav,
+  footer,
+  .rhero {
+    display: none !important;
+  }
+  .rsec {
+    padding: 0;
+  }
+  .wrap {
+    width: 100%;
+  }
+  .sheet {
+    max-width: none;
+    padding: 0;
+    background: none;
+    border: 0;
+    border-radius: 0;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    line-height: 1.4;
+  }
+  .sh-head {
+    padding-bottom: 5mm;
+  }
+  .sh-head h2 {
+    font-size: 28pt;
+  }
+  .sh-role {
+    margin-top: 2mm;
+    font-size: 12pt;
+  }
+  .sh-block {
+    gap: 2.5mm;
+  }
+  .sh-list li {
+    gap: 0.5mm;
+  }
+  .sh-list p {
+    margin-top: 0.5mm;
+  }
+  .sh-grid {
+    grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
+    gap: 10mm;
+    padding-top: 6mm;
+  }
+  .sh-main,
+  .sh-side {
+    gap: 6mm;
+  }
+  .sh-list {
+    gap: 3mm;
+  }
+  .sh-row b {
+    font-size: 12.5pt;
+  }
+  .sh-skills dd {
+    margin-bottom: 2mm;
+  }
+  .sh-plain {
+    gap: 1.5mm;
+  }
+  .sh-block p,
+  .sh-contact,
+  .sh-plain,
+  .sh-skills dd {
+    font-size: 9.5pt;
+  }
+  .sh-when,
+  .sh-org,
+  .sh-skills dt {
+    font-size: 9pt;
+  }
+  .sh-list li {
+    break-inside: avoid;
+  }
+  .shadow {
+    text-shadow: none;
+  }
+}
