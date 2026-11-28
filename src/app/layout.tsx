@@ -8,12 +8,24 @@ import { profile } from "@/content/profile";
 import { SITE_URL } from "@/lib/site";
 import "./globals.css";
 
-const fraunces = Fraunces({ subsets: ["latin"], style: ["normal", "italic"], axes: ["opsz"], variable: "--font-fraunces" });
-const instrument = Instrument_Sans({ subsets: ["latin"], weight: ["400", "500", "600"], variable: "--font-instrument" });
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  style: ["normal", "italic"],
+  axes: ["opsz"],
+  variable: "--font-fraunces",
+});
+const instrument = Instrument_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-instrument",
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: { default: `${profile.name} · ${profile.role}`, template: `%s · ${profile.name}` },
+  title: {
+    default: `${profile.name} · ${profile.role}`,
+    template: `%s · ${profile.name}`,
+  },
   description: profile.description,
   authors: [{ name: profile.name }],
   openGraph: {
@@ -24,7 +36,10 @@ export const metadata: Metadata = {
   twitter: { card: "summary_large_image", creator: "@MSantos79880" },
 };
 
-export const viewport: Viewport = { themeColor: "#0C1320", colorScheme: "dark" };
+export const viewport: Viewport = {
+  themeColor: "#0C1320",
+  colorScheme: "dark",
+};
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
@@ -36,7 +51,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <footer>
           <div className="wrap">
             <span>{profile.name} · 2026</span>
-            <span>One landscape, repainted from dawn to night as you scroll.</span>
           </div>
         </footer>
         <TiltEffect />
