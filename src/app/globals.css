@@ -88,7 +88,7 @@ section{padding:clamp(72px,11vw,150px) 0}
 .tl-stop{display:grid;grid-template-columns:minmax(0,1fr) 140px minmax(0,1fr);align-items:start}
 .tl-stop[data-lane="1"][data-side="left"]{--off:-44px}
 .tl-stop[data-lane="1"][data-side="right"]{--off:44px}
-.tl-node{grid-row:1;grid-column:2;justify-self:center;margin-top:44px;width:16px;height:16px;border-radius:50%;background:var(--ink);box-shadow:0 0 0 4px var(--accent),0 2px 14px 4px rgba(6,10,18,.55);transform:translateX(var(--off,0px));transition:opacity .5s,transform .5s}
+.tl-node{grid-row:1;grid-column:2;justify-self:center;margin-top:44px;width:16px;height:16px;border-radius:50%;background:var(--ink);box-shadow:0 0 0 4px var(--accent),0 2px 14px 4px rgba(6,10,18,.55);transform:translateX(var(--off,0px));transition:opacity .5s,transform .5s;will-change:opacity,transform}
 .tl.drawn .tl-stop:not(.lit) .tl-node{opacity:.25;transform:translateX(var(--off,0px)) scale(.6)}
 .tl-stop[data-now].lit .tl-node{animation:tl-glow 2.8s ease-in-out infinite}
 @keyframes tl-glow{50%{box-shadow:0 0 0 4px var(--accent),0 0 24px 10px rgba(243,196,141,.6)}}
