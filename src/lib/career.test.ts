@@ -13,11 +13,11 @@ const job = (company: string, start: string, end?: string): Job => ({
 });
 
 describe("careerPath", () => {
-  it("orders newest first and keeps sequential jobs on the trunk", () => {
-    const stops = careerPath([job("A", "2019-01", "2020-01"), job("B", "2021-01")]);
+  it("orders oldest first and keeps sequential jobs on the trunk", () => {
+    const stops = careerPath([job("B", "2021-01"), job("A", "2019-01", "2020-01")]);
     expect(stops.map((s) => [s.job.company, s.lane])).toEqual([
-      ["B", 0],
       ["A", 0],
+      ["B", 0],
     ]);
   });
 
@@ -29,10 +29,10 @@ describe("careerPath", () => {
       job("Ceos", "2023-10", "2025-06"),
     ]);
     expect(stops.map((s) => [s.job.company, s.lane])).toEqual([
-      ["Atan", 0],
-      ["Ceos", 0],
-      ["Tambau", 1],
       ["Supermarket", 0],
+      ["Tambau", 1],
+      ["Ceos", 0],
+      ["Atan", 0],
     ]);
   });
 

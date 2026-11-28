@@ -12,15 +12,16 @@ const endOf = (job: Job) => job.end ?? "9999-12";
 const overlaps = (a: Job, b: Job) => a.start <= endOf(b) && b.start <= endOf(a);
 
 /**
- * Lays jobs out newest first. A job held alongside an older-starting one branches off,
- * since the older job carries the trunk further down. Two lanes are enough for this
- * history; a third concurrent job would share the branch lane.
+ * Lays jobs out oldest first, so the path reads from the first job down to the current one.
+ * A job held alongside an older-starting one branches off, since the older job already
+ * carries the trunk. Two lanes are enough for this history; a third concurrent job would
+ * share the branch lane.
  */
 export function careerPath(jobs: readonly Job[]): PathStop[] {
-  const sorted = [...jobs].sort((a, b) => b.start.localeCompare(a.start));
+  const sorted = [...jobs].sort((a, b) => a.start.localeCompare(b.start));
   return sorted.map((job, i) => ({
     job,
-    lane: sorted.slice(i + 1).some((older) => overlaps(job, older)) ? 1 : 0,
+    lane: sorted.slice(0, i).some((older) => overlaps(job, older)) ? 1 : 0,
     side: i % 2 === 0 ? "left" : "right",
   }));
 }
