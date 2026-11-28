@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { jobs } from "../src/content/profile";
 import { projects } from "../src/content/projects";
 
 test("home renders every section, job and project", async ({ page }) => {
@@ -46,9 +47,20 @@ test("unknown project is a 404 and the old Plai alias redirects", async ({ page 
   await expect(page).toHaveURL(/\/projects\/plai$/);
 });
 
+test("resume lists every job and prints only the sheet", async ({ page }) => {
+  await page.goto("/resume");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("The one-page");
+  await expect(page.locator(".sheet .sh-list").first().locator("li")).toHaveCount(jobs.length);
+  await expect(page.getByRole("button", { name: "Save as PDF" })).toBeVisible();
+  await page.emulateMedia({ media: "print" });
+  await expect(page.locator(".nav")).toBeHidden();
+  await expect(page.locator(".rhero")).toBeHidden();
+  await expect(page.locator(".sheet")).toBeVisible();
+});
+
 test("no horizontal scroll", async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 800 });
-  for (const path of ["/", "/projects", "/projects/posture-guard"]) {
+  for (const path of ["/", "/projects", "/projects/posture-guard", "/resume"]) {
     await page.goto(path);
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
     expect(overflow, path).toBeLessThanOrEqual(0);

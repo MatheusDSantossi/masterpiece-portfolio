@@ -9,6 +9,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   return [
     { url: absoluteUrl("/"), lastModified: latest, priority: 1 },
     { url: absoluteUrl("/projects"), lastModified: latest, priority: 0.9 },
+    { url: absoluteUrl("/resume"), lastModified: latest, priority: 0.8 },
     ...projects.map((project) => ({
       url: absoluteUrl(`/projects/${project.slug}`),
       lastModified: project.updatedAt,
