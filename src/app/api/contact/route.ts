@@ -1,9 +1,20 @@
 import { Resend } from "resend";
 import { z } from "zod";
-import { contactSchema, type ContactResponse } from "@/lib/contact";
+import {
+  contactSchema,
+  describeMissingConfig,
+  describeSendFailure,
+  type ContactResponse,
+  type SendFailure,
+} from "@/lib/contact";
 import { logger } from "@/lib/logger";
 
-const json = (body: ContactResponse, status: number) => Response.json(body, { status });
+const json = (body: ContactResponse, status: number) =>
+  Response.json(body, { status });
+const fail = ({ status, code, error }: SendFailure) =>
+  json({ ok: false, code, error }, status);
+/** Development responses carry the provider's own error so the cause is visible in the browser. */
+const detail = process.env.NODE_ENV !== "production";
 
 export async function POST(request: Request) {
   let payload: unknown;
@@ -15,7 +26,14 @@ export async function POST(request: Request) {
 
   const parsed = contactSchema.safeParse(payload);
   if (!parsed.success) {
-    return json({ ok: false, error: "Some fields need another look.", fieldErrors: z.flattenError(parsed.error).fieldErrors }, 400);
+    return json(
+      {
+        ok: false,
+        error: "Some fields need another look.",
+        fieldErrors: z.flattenError(parsed.error).fieldErrors,
+      },
+      400,
+    );
   }
 
   const { name, email, message, website } = parsed.data;
@@ -26,20 +44,41 @@ export async function POST(request: Request) {
   const to = process.env.CONTACT_TO_EMAIL;
   const from = process.env.CONTACT_FROM_EMAIL;
   if (!apiKey || !to || !from) {
-    logger.error("contact form is not configured", { hasKey: Boolean(apiKey), hasTo: Boolean(to), hasFrom: Boolean(from) });
-    return json({ ok: false, error: "The contact form is offline right now. Please reach me on LinkedIn." }, 503);
+    const missing = Object.entries({
+      RESEND_API_KEY: apiKey,
+      CONTACT_TO_EMAIL: to,
+      CONTACT_FROM_EMAIL: from,
+    })
+      .filter(([, value]) => !value)
+      .map(([key]) => key);
+    logger.error("contact form is not configured", { missing });
+    return fail(describeMissingConfig(missing));
   }
 
-  const { error } = await new Resend(apiKey).emails.send({
-    from,
-    to,
-    replyTo: email,
-    subject: `Portfolio message from ${name}`,
-    text: `${message}\n\n${name} <${email}>`,
-  });
-  if (error) {
-    logger.error("contact email failed", { name: error.name, message: error.message });
-    return json({ ok: false, error: "Your message didn't go through. Please try again in a minute." }, 502);
+  let result: Awaited<ReturnType<Resend["emails"]["send"]>>;
+  try {
+    result = await new Resend(apiKey).emails.send({
+      from,
+      to,
+      replyTo: email,
+      subject: `Portfolio message from ${name}`,
+      text: `${message}\n\n${name} <${email}>`,
+    });
+  } catch (thrown) {
+    const reason = thrown instanceof Error ? thrown.message : String(thrown);
+    logger.error("contact email service unreachable", { reason });
+    return fail({
+      status: 502,
+      code: "email_unreachable",
+      error: `Couldn't reach the email service. Please try again in a minute.${detail ? ` (${reason})` : ""}`,
+    });
+  }
+  if (result.error) {
+    logger.error("contact email failed", {
+      name: result.error.name,
+      message: result.error.message,
+    });
+    return fail(describeSendFailure(result.error, detail));
   }
 
   return json({ ok: true }, 200);
