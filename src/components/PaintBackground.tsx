@@ -42,6 +42,9 @@ export function PaintBackground() {
     // canvas pixel, so lowering it mid-scroll made the whole painting visibly jump to a coarser size.
     let quality = 1;
     let scenes: HTMLElement[] = [];
+    // Scene centers in page coordinates. Measured when layout changes, not per frame: reading layout
+    // every frame forced a synchronous reflow whenever another effect had just written to the DOM.
+    let centers: number[] = [];
     let awake = false;
     let frameId = 0;
     // Targets (t*) and eased values: scroll, light parallax, bead position.
@@ -50,18 +53,21 @@ export function PaintBackground() {
     let tbx = innerWidth * 0.76, tby = innerHeight * 0.36;
     let bx = tbx, by = tby;
 
+    const measureScenes = () => {
+      centers = scenes.map((el) => {
+        const r = el.getBoundingClientRect();
+        return r.top + scrollY + r.height / 2;
+      });
+    };
     const collectScenes = () => {
       scenes = Array.from(document.querySelectorAll<HTMLElement>("main [data-scene]"));
+      measureScenes();
     };
 
     const currentLight = (): Light & { k: number } => {
       const first = scenes[0];
       if (!first) return { ...sceneLight(0), k: 0 };
       const mid = sy + innerHeight * 0.5;
-      const centers = scenes.map((el) => {
-        const r = el.getBoundingClientRect();
-        return r.top + scrollY + r.height / 2;
-      });
       let i = 0;
       while (i < centers.length - 2 && mid > (centers[i + 1] ?? Infinity)) i++;
       const a = scenes[i] ?? first;
@@ -167,6 +173,7 @@ export function PaintBackground() {
     };
     const resize = () => {
       sizeCanvas();
+      measureScenes();
       render();
       wake();
     };
@@ -203,6 +210,12 @@ export function PaintBackground() {
       canvas.classList.add("ready");
       wake();
     });
+    // Content above a scene can grow after load (fonts, images, the timeline), moving every center below it.
+    const layoutObserver = new ResizeObserver(() => {
+      measureScenes();
+      wake();
+    });
+    layoutObserver.observe(document.body);
     addEventListener("resize", resize);
     addEventListener("scroll", wake, { passive: true });
     addEventListener("pointermove", onPointerMove);
@@ -211,6 +224,7 @@ export function PaintBackground() {
     return () => {
       disposed = true;
       cancelAnimationFrame(frameId);
+      layoutObserver.disconnect();
       removeEventListener("resize", resize);
       removeEventListener("scroll", wake);
       removeEventListener("pointermove", onPointerMove);
