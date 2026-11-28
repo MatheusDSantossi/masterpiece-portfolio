@@ -4,8 +4,11 @@ const VERTEX = "attribute vec2 a;void main(){gl_Position=vec4(a,0.,1.);}";
 
 export type Program = {
   gl: WebGLRenderingContext;
+  /** Makes this the program that uniform values and draws apply to. */
+  use: () => void;
   uniform: (name: string) => WebGLUniformLocation | null;
-  draw: () => void;
+  /** Draws over the whole bound target, which is width x height pixels. */
+  draw: (width: number, height: number) => void;
 };
 
 /** COMPLETION_STATUS_KHR from KHR_parallel_shader_compile. */
@@ -22,11 +25,12 @@ function linked(gl: WebGLRenderingContext, program: WebGLProgram): Promise<void>
 }
 
 /**
- * Compiles a full-screen-triangle program. Resolves to null when WebGL is unavailable or the shader fails.
- * The compile runs in the background where the browser supports it: a large fragment shader can take
- * seconds to compile on integrated GPUs the first time, and waiting for it on the main thread froze the page.
+ * Compiles a full-screen-triangle program for each fragment shader on one WebGL context. Resolves to
+ * null when WebGL is unavailable or any shader fails. The compiles run in the background, side by side,
+ * where the browser supports it: a large fragment shader can take seconds to compile on integrated GPUs
+ * the first time, and waiting for it on the main thread froze the page.
  */
-export async function createProgram(canvas: HTMLCanvasElement, fragment: string): Promise<Program | null> {
+export async function createPrograms(canvas: HTMLCanvasElement, fragments: readonly string[]): Promise<Program[] | null> {
   const gl = canvas.getContext("webgl", { antialias: false });
   if (!gl) return null;
 
@@ -38,40 +42,48 @@ export async function createProgram(canvas: HTMLCanvasElement, fragment: string)
     return shader;
   };
   const vs = compile(gl.VERTEX_SHADER, VERTEX);
-  const fs = compile(gl.FRAGMENT_SHADER, fragment);
-  const program = gl.createProgram();
-  if (!vs || !fs || !program) return null;
+  if (!vs) return null;
+  const pending = fragments.map((source) => {
+    const fs = compile(gl.FRAGMENT_SHADER, source);
+    const program = gl.createProgram();
+    if (!fs || !program) return null;
+    gl.attachShader(program, vs);
+    gl.attachShader(program, fs);
+    // Every program reads the triangle from the same attribute slot, so one buffer setup serves them all.
+    gl.bindAttribLocation(program, 0, "a");
+    gl.linkProgram(program);
+    return { fs, program };
+  });
 
-  gl.attachShader(program, vs);
-  gl.attachShader(program, fs);
-  gl.linkProgram(program);
-  await linked(gl, program);
-  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-    logger.error("shader link failed", { log: gl.getProgramInfoLog(program) ?? gl.getShaderInfoLog(fs) });
-    return null;
+  const programs: Program[] = [];
+  for (const entry of pending) {
+    if (!entry) return null;
+    const { fs, program } = entry;
+    await linked(gl, program);
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+      logger.error("shader link failed", { log: gl.getProgramInfoLog(program) ?? gl.getShaderInfoLog(fs) });
+      return null;
+    }
+    const cache = new Map<string, WebGLUniformLocation | null>();
+    programs.push({
+      gl,
+      use: () => gl.useProgram(program),
+      uniform: (name) => {
+        if (!cache.has(name)) cache.set(name, gl.getUniformLocation(program, name));
+        return cache.get(name) ?? null;
+      },
+      draw: (width, height) => {
+        gl.viewport(0, 0, width, height);
+        gl.drawArrays(gl.TRIANGLES, 0, 3);
+      },
+    });
   }
 
-  gl.useProgram(program);
   gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
-  const position = gl.getAttribLocation(program, "a");
-  gl.enableVertexAttribArray(position);
-  gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0);
-
-  const cache = new Map<string, WebGLUniformLocation | null>();
-  const uniform = (name: string) => {
-    if (!cache.has(name)) cache.set(name, gl.getUniformLocation(program, name));
-    return cache.get(name) ?? null;
-  };
-
-  return {
-    gl,
-    uniform,
-    draw: () => {
-      gl.viewport(0, 0, canvas.width, canvas.height);
-      gl.drawArrays(gl.TRIANGLES, 0, 3);
-    },
-  };
+  gl.enableVertexAttribArray(0);
+  gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+  return programs;
 }
 
 export type Rgb = [number, number, number];
